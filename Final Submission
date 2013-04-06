@@ -1,0 +1,84 @@
+from urllib.request import *
+
+def num_words(text):
+  words = text.split(' ')
+	return len(words)
+def num_sentences(text):
+	sentences= text.split('.')
+	return len(sentences)
+def num_fpw(text):
+	count = 0
+	words = text.split(' ')
+	for word in words:
+		if word == 'I' or 'My' in word or 'Me' in word or "I've" in word or word=='me' or word=='my' or word == 'we' or word== 'our' or word== 'us':
+			count+=1
+	return count
+	
+def num_spw(text):
+	count = 0
+	words = text.split(' ')
+	for word in words:
+		if 'You' in word or 'you' in word or "you're" in word:
+			count+=1
+	return count
+def num_quote(text):
+	return text.count('"')
+
+
+			
+class File():
+	def __init__(self, text, index):
+		self.text = text
+		self.index = index
+		self.num_words = num_words(text)
+		self.num_sentences = num_sentences(text)
+		self.words_per_sentence = self.num_words/self.num_sentences
+		self.fpw_per_word = num_fpw(text)/self.num_words
+		self.quotes = num_quote(text)
+		self.quote_per_word = self.quotes/self.num_words
+		self.spw_per_word = num_spw(text)/self.num_words
+		self.num_exl = text.count('!')
+		self.rank_wps = None
+		self.rank_fpw = None
+		self.rank_spw = None
+		self.rank_quote = None
+		self.rank_exl = None
+		self.differences = []
+		
+	def __repr__(self):
+		return str(self.index) + ': ' + str(self.rank_wps)+','+str(self.rank_fpw)+','+ str(self.rank_spw)+','+ str(self.rank_quote) + ','+str(self.rank_exl)
+
+
+files = []
+for i in range(1,31):
+	file_text = str(urlopen('http://www.cs.berkeley.edu/~jrs/coding4grub/'+str(i)+'.txt').readlines())
+	file = File(file_text, i)
+	files.append(file)
+
+
+files = sorted(files, key=lambda file: file.words_per_sentence)
+for i in range(len(files)):
+	files[i].rank_wps=i
+files = sorted(files, key=lambda file: file.fpw_per_word)
+for i in range(len(files)):
+	files[i].rank_fpw=i
+files = sorted(files, key=lambda file: file.spw_per_word)
+for i in range(len(files)):
+	files[i].rank_spw=i
+files = sorted(files, key=lambda file: file.quote_per_word)
+for i in range(len(files)):
+	files[i].rank_quote=i
+files = sorted(files, key=lambda file: file.num_exl)
+for i in range(len(files)):
+	files[i].rank_exl=i
+
+files = sorted(files, key=lambda file: file.index)
+for i in range(len(files)):
+	for j in range(len(files)):
+		files[i].differences.append([(abs(files[i].rank_wps- files[j].rank_wps)+abs(files[i].rank_fpw- files[j].rank_fpw)+abs(files[i].rank_spw- files[j].rank_spw)+abs(files[i].rank_quote- files[j].rank_quote)+abs(files[i].rank_exl- files[j].rank_exl)), j+1])
+	
+	
+for file in files:
+	file.differences=sorted(file.differences, key= lambda file: file[0])
+	print(file.index,file.differences[1][1])
+
